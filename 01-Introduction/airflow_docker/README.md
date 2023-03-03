@@ -113,7 +113,7 @@ Host: https://randomuser.me/
 ```
 
 ## Python Operator 
-The python operator allows you to execute a python function 
+The PythonOperator is the most popular operator in Apache Airflow. It allows you to execute a python function or a python script.
 
 ```python
 def process_user_func(ti): #ti stands for task instance
@@ -139,5 +139,55 @@ with DAG('user_processing' ....
     process_user = PythonOperator(
         task_id = 'process_user', 
         python_callable= process_user_func
+    )
+```
+
+## Test
+```bash
+$ docker-compose ps
+NAME                                 IMAGE                  COMMAND                  SERVICE             CREATED             STATUS                    PORTS   
+airflow_docker-airflow-scheduler-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-scheduler   37 minutes ago      Up 36 minutes (healthy)   8080/tcp
+airflow_docker-airflow-triggerer-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-triggerer   37 minutes ago      Up 36 minutes (healthy)   8080/tcp
+airflow_docker-airflow-webserver-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-webserver   37 minutes ago      Up 36 minutes (healthy)   0.0.0.0:8080->8080/tcp
+airflow_docker-airflow-worker-1      apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-worker      37 minutes ago      Up 36 minutes (healthy)   8080/tcp
+airflow_docker-postgres-1            postgres:13            "docker-entrypoint.s…"   postgres            38 minutes ago      Up 38 minutes (healthy)   5432/tcp
+airflow_docker-redis-1               redis:latest           "docker-entrypoint.s…"   redis               38 minutes ago      Up 38 minutes (healthy)   6379/tcp
+
+docker exec -it airflow_docker-airflow-scheduler-1 /bin/bash
+
+airflow@a19c7c3c8f4a:/opt/airflow$ airflow tasks test user_processing extract_user 2022-03-01
+[2023-03-03 19:46:33,078] {http.py:125} INFO - {"results":[{"gender":"male","name":{"title":"Mr","first":"Praneel","last":"Chavare"},"location":{"street":{"number":7044,"name":"Janpath"},"city":"Panihati","state":"Andaman and Nicobar Islands","country":"India","postcode":20521,"coordinates":{"latitude":"6.0699","longitude":"-118.3821"},"timezone":{"offset":"-3:00","description":"Brazil, Buenos Aires, Georgetown"}},"email":"praneel.chavare@example.com","login":{"uuid":"b35b5b01-05f8-4d1c-93dd-9f08849a23fc","username":"ticklishsnake628","password":"cardinal","salt":"dv0IYgYv","md5":"219915bdf4569f133c0e8846beec7370","sha1":"204b453bc44c4e7cf988ef8c9848ae9e7a762549","sha256":"7f31ea145fa2a2a36fbae2ac84d6c3413b449e6c18704c835bd33fba19d24a96"},"dob":{"date":"1998-06-30T04:37:35.586Z","age":24},"registered":{"date":"2003-04-09T23:30:55.267Z","age":19},"phone":"8256119892","cell":"7771653718","id":{"name":"UIDAI","value":"913820250353"},"picture":{"large":"https://randomuser.me/api/portraits/men/54.jpg","medium":"https://randomuser.me/api/portraits/med/men/54.jpg","thumbnail":"https://randomuser.me/api/portraits/thumb/men/54.jpg"},"nat":"IN"}],"info":{"seed":"f55e92a42eed2e29","results":1,"page":1,"version":"1.4"}}
+[2023-03-03 19:46:33,105] {taskinstance.py:1412} INFO - Marking task as SUCCESS. dag_id=user_processing, task_id=extract_user, execution_date=20220301T000000, start_date=, end_date=20230303T194633
+
+airflow@a19c7c3c8f4a:/opt/airflow$ airflow tasks test user_processing process_user 2022-03-01
+```
+
+## Hooks
+
+Hooks are very useful to abstract away the complexity of interacting with tools.
+
+For example, the PostgresOperator uses the PostgresHook to interact with a Postgres Database.
+
+It's always good to look at the hooks to check if there isn't any method that could be useful for you. `copy_expert` to export data from a CSV file into a Postgres table is a great example. This method is not available from the Operator, but we can use it thanks to the Hook.
+
+```python 
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+def store_user_func():
+    hook = PostgresHook(postgres_conn_id='postgres')
+    hook.copy_expert(
+        sql="COPY users FROM stdin WITH DELIMITER as ','",
+        filename='/tmp/processed_user.csv'
+    )
+
+with DAG('user_processing' ....
+        
+    ...
+    ...
+    ...
+
+    store_user = PythonOperator(
+        task_id= 'store_user', 
+        python_callable=store_user_func
     )
 ```

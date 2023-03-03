@@ -3,6 +3,8 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.providers.http.sensors.http import HttpSensor
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.operators.python import PythonOperator 
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
 
 from datetime import datetime
 import pandas as pd
@@ -22,6 +24,13 @@ def process_user_func(ti): #ti stands for task instance
         'email': user['name']['email'],
     })
     processed_user.to_csv('/tmp/processed_user.csv', index=None, header=False)
+
+def store_user_func():
+    hook = PostgresHook(postgres_conn_id='postgres')
+    hook.copy_expert(
+        sql="COPY users FROM stdin WITH DELIMITER as ','",
+        filename='/tmp/processed_user.csv'
+    )
 
 with DAG('user_processing', start_date=datetime(2023,3,1), 
         schedule_interval='@daily', catchup=False) as dag:
@@ -59,6 +68,11 @@ with DAG('user_processing', start_date=datetime(2023,3,1),
         process_user = PythonOperator(
             task_id = 'process_user', 
             python_callable= process_user_func
+        )
+
+        store_user = PythonOperator(
+            task_id= 'store_user', 
+            python_callable=store_user_func
         )
 
 
