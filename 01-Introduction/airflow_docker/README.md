@@ -376,3 +376,53 @@ Refresh UI and you should see the Graph view as follows:
 
 ![Screenshot](img/s5.jpg)
 
+# TaskGroups 
+
+SubDAGS are being now deprecated and using TaskGroups is so much simpler now.
+
+Create a folder groups (same level as subdags) and create group_downloads.py
+
+```python
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.utils.task_group import TaskGroup
+
+def download_tasks():
+    
+    with TaskGroup("downloads", tooltip="Download tasks") as group: 
+
+        download_a = BashOperator(
+            task_id= 'download_a',
+            bash_command='sleep 10'
+        ) 
+
+        download_b = BashOperator(
+            task_id= 'download_b',
+            bash_command='sleep 10'
+        )  
+
+        download_c = BashOperator(
+            task_id= 'download_c',
+            bash_command='sleep 10'
+        )  
+
+    return group
+
+```
+
+on group_dag.py add the following changes:
+
+```python
+from groups.group_downloads import download_tasks
+
+# downloads = SubDagOperator(
+    # task_id='downloads',
+    # subdag=subdag_downloads(dag.dag_id,'downloads', args)
+    # )
+
+downloads = download_tasks()
+```
+
+Now, refresh the UI and you should see the following: 
+
+![Screenshot](img/s6.jpg)
