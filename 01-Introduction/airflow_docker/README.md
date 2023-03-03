@@ -269,3 +269,12 @@ Assuming a start date at 10:00 AM and a schedule interval every 10 mins:
 
 ![Screenshot](img/s3.png)
 
+## Remove DAG examples 
+
+To keep our Airflow instance nice and clean, we are going to remove the DAG examples from the UI.
+
+Open the file docker-compose.yaml
+
+Replace the value 'true' by 'false' for the AIRFLOW__CORE__LOAD_EXAMPLES environment variables
+
+Restart Airflow by typing `docker-compose down && docker-compose up -d`
