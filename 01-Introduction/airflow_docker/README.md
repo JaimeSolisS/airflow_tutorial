@@ -210,3 +210,62 @@ Just by doing this, save the file and go back to the after UI. If you refresh th
 defined.
 
 ![Screenshot](img/s2.jpg)
+
+## Trigger your DAG
+
+Trigger the DAG and wait for All tasks to finish successfully.
+
+Enter to the the docker container to see the results.
+
+```bash 
+$ docker-compose ps
+NAME                                 IMAGE                  COMMAND                  SERVICE             CREATED             STATUS                 PORTS
+airflow_docker-airflow-scheduler-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-scheduler   2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-airflow-triggerer-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-triggerer   2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-airflow-webserver-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-webserver   2 hours ago         Up 2 hours (healthy)   0.0.0.0:8080->8080/tcp
+airflow_docker-airflow-worker-1      apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-worker      2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-postgres-1            postgres:13            "docker-entrypoint.s…"   postgres            2 hours ago         Up 2 hours (healthy)   5432/tcp
+airflow_docker-redis-1               redis:latest           "docker-entrypoint.s…"   redis               2 hours ago         Up 2 hours (healthy)   6379/tcp
+$ docker exec -it airflow_docker-airflow-worker-1 /bin/bash
+airflow@71427ac4fd07:/opt/airflow$ ls /tmp
+processed_user.csv  pymp-vhh4c3c4  tmpmsx8ml11
+```
+As you can see we've got the file processed_user.csv as defined in the task process.
+
+Now, lets check in the database.
+
+```bash
+$ docker-compose ps
+NAME                                 IMAGE                  COMMAND                  SERVICE             CREATED             STATUS                 PORTS
+airflow_docker-airflow-scheduler-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-scheduler   2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-airflow-triggerer-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-triggerer   2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-airflow-webserver-1   apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-webserver   2 hours ago         Up 2 hours (healthy)   0.0.0.0:8080->8080/tcp
+airflow_docker-airflow-worker-1      apache/airflow:2.3.4   "/usr/bin/dumb-init …"   airflow-worker      2 hours ago         Up 2 hours (healthy)   8080/tcp
+airflow_docker-postgres-1            postgres:13            "docker-entrypoint.s…"   postgres            2 hours ago         Up 2 hours (healthy)   5432/tcp
+airflow_docker-redis-1               redis:latest           "docker-entrypoint.s…"   redis               2 hours ago         Up 2 hours (healthy)   6379/tcp
+$ docker exec -it airflow_docker-postgres-1 /bin/bash      
+root@21e51eb7c65a:/# psql -Uairflow
+psql (13.10 (Debian 13.10-1.pgdg110+1))
+Type "help" for help.
+
+airflow=# SELECT * FROM users;
+ firstname | lastname | country |    username     | password |           email
+-----------+----------+---------+-----------------+----------+----------------------------
+ Carina    | Melheim  | Norway  | crazyleopard866 | 505050   | carina.melheim@example.com 
+(1 row)
+
+airflow=#
+```
+
+## DAG Scheduling 
+start_date: The timestamp from which the scheduler will attempt to backfill  
+schedule_interval: How often a DAG runs  
+end_date: The timestamp from which a DAG ends  
+
+A DAG is triggered **AFTER** the
+start_date/last_run + the shedule_interval
+
+Assuming a start date at 10:00 AM and a schedule interval every 10 mins:
+
+![Screenshot](img/s3.png)
+
