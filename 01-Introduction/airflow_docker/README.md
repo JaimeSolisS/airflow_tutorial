@@ -84,7 +84,7 @@ For example, if you want to wait for files, you can use the FileSensor.
 
 If you want to wait for an entry in an S3 bucket, you can use the S3KeySensor.
 
-## Implement a task for api 
+## Implement a sensor for api 
 ```python
     is_api_available = HttpSensor(
             task_id='is_api_available', 
@@ -98,4 +98,16 @@ Create the connection user_api on UI
 Name: user_api    
 Connection type: HTTP  
 Host: https://randomuser.me/
+```
+
+## Implement a task to extract users from api 
+```python
+    extract_user = SimpleHttpOperator(
+            task_id='extract_user',
+            http_conn_id='user_api',
+            endpoint='api/',
+            method='GET',
+            response_filter=lambda response: json. loads(response. text),
+            log_response=True
+        )
 ```
