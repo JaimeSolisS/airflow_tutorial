@@ -278,3 +278,101 @@ Open the file docker-compose.yaml
 Replace the value 'true' by 'false' for the AIRFLOW__CORE__LOAD_EXAMPLES environment variables
 
 Restart Airflow by typing `docker-compose down && docker-compose up -d`
+
+## SubDAGs
+
+Let's imagine that you have a dag with those tasks.
+
+![Screenshot](img/s4.jpg)
+
+Because a,b & c are similar, it would be better to group them in a subDAG. 
+
+under dags folder, create subdags folder and create subdag_downloads.py
+
+```python
+from airflow import DAG
+from airflow. operators. bash import BashOperator
+
+def subdag_downloads(parent_dag_id, child_dag_id, args):
+    
+    with DAG(f"{parent_dag_id}.{child_dag_id}",
+        start_date=args['start_date'],
+        schedule_interval=args['schedule_interval'],
+        catchup=args('catchup')) as dag:
+
+        download_a = BashOperator(
+            task_id= 'download_a',
+            bash_command='sleep 10'
+        ) 
+
+        download_b = BashOperator(
+            task_id= 'download_b',
+            bash_command='sleep 10'
+        )  
+
+        download_c = BashOperator(
+            task_id= 'download_c',
+            bash_command='sleep 10'
+        )  
+
+    return dag
+```
+
+At this point you have successfully created a function subDAG called subdag_downloads  that returns a DAG, your subDAG with the tasks that you want to group together.
+
+And this is the first step to create a subDAG.
+
+On you main DAG:  
+
+1. import SubDagOperator
+2. Define args object 
+3. Remove tasks for download a,b and c.
+4. import subdag function
+5. Create SubDagOperator
+6. Change dependencies, from tasks to subDAG
+
+```python
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.operators.subdag import SubDagOperator
+from subdags.subdag_downloads import subdag_downloads
+
+from datetime import datetime
+
+with DAG('group_dag', start_date=datetime(2023, 3, 1), 
+    schedule_interval='@daily', catchup=False) as dag:
+
+    args = {'start_date': dag.start_date, 'schedule_interval': dag.schedule_interval, 'catchup': dag.catchup}
+    
+    downloads = SubDagOperator(
+    task_id='downloads',
+    subdag=subdag_downloads(dag.dag_id,'downloads', args)
+    )
+
+    check_files = BashOperator(
+        task_id='check_files',
+        bash_command='sleep 10'
+    )
+
+    transform_a = BashOperator(
+        task_id='transform_a',
+        bash_command='sleep 10'
+    )
+
+    transform_b = BashOperator(
+        task_id='transform_b',
+        bash_command='sleep 10'
+    )
+
+    transform_c = BashOperator(
+        task_id='transform_c',
+        bash_command='sleep 10'
+    )
+
+    downloads >> check_files >> [transform_a, transform_b, transform_c]
+```
+
+Refresh UI and you should see the Graph view as follows:
+
+![Screenshot](img/s5.jpg)
+
