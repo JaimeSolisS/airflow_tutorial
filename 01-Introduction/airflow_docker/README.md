@@ -191,3 +191,22 @@ with DAG('user_processing' ....
         python_callable=store_user_func
     )
 ```
+
+## Add dependencies
+
+If you go on the flow UI and click on the user processing, then click on graph. You land on this view.
+
+![Screenshot](img/s1.jpg)
+
+This gives you the representation of your tasks in your data pipeline and as you can see, they are not linked in any way. So it's time to create the dependencies between your tasks.
+
+It is recommended to define the dependencies at the end of the DAG file
+
+```python
+create_table >> is_api_available >> extract_user >> process_user >> store_user
+```
+
+Just by doing this, save the file and go back to the after UI. If you refresh the page, you end up with the following data pipeline with the dependencies correctly
+defined.
+
+![Screenshot](img/s2.jpg)

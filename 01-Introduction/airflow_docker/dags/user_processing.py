@@ -75,4 +75,7 @@ with DAG('user_processing', start_date=datetime(2023,3,1),
             python_callable=store_user_func
         )
 
+        # Define dependencies at the end
+        create_table >> is_api_available >> extract_user >> process_user >> store_user
+
 
