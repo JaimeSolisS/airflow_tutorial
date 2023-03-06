@@ -453,3 +453,32 @@ with DAG("xcom_dag", start_date=datetime(2022, 1, 1),
         python_callable=_t2
     )
 ```
+
+## Choosing a specific path in DAG
+
+1. Import BranchPythonOperator() and create a task with it
+
+```python 
+branch = BranchPythonOperator(
+        task_id='branch', 
+        python_callable=_branch
+    )
+```
+
+2. Define the function 
+```python 
+def _branch(ti):
+    value = ti.xcom_pull(key='my_key', task_ids='t1')
+    if value== 42:
+        # Execute t2
+        return 't2'
+    # else execute t3
+    return 't3'
+```
+3. Define the dependencies
+```python 
+#t1 >> t2 >> t3
+t1 >> branch >> [t2, t3]
+```
+
+The path that is not chosen by the branch operator is skipped automatically.
