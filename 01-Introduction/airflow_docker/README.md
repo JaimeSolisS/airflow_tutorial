@@ -376,7 +376,7 @@ Refresh UI and you should see the Graph view as follows:
 
 ![Screenshot](img/s5.jpg)
 
-# TaskGroups 
+## TaskGroups 
 
 SubDAGS are being now deprecated and using TaskGroups is so much simpler now.
 
@@ -426,3 +426,30 @@ downloads = download_tasks()
 Now, refresh the UI and you should see the following: 
 
 ![Screenshot](img/s6.jpg)
+
+## Share data between tasks with XComs
+
+XComs stands for **Cross communication**. Allows to exchange SMALL amount of data. 
+
+You should not share terabytes or gigabytes of data with XComs because they are limited in size. For example, if you use SQLite you can start up to 2 GB of data for a given XCOM. If you use Postgres, you can start up to 1 GB of data in a given XCOM, but if you use mySQL, you can start up to 64 KB of data for given XCOM.
+
+```python 
+def _t1(ti):
+    ti.xcom_push(key='my_key', value=42)
+
+def _t2(ti):
+    ti.xcom_pull(key='my_key', tasks_ids='t1')
+
+with DAG("xcom_dag", start_date=datetime(2022, 1, 1), 
+    schedule_interval='@daily', catchup=False) as dag:
+
+    t1 = PythonOperator(
+        task_id='t1',
+        python_callable=_t1
+    )
+
+    t2 = PythonOperator(
+        task_id='t2',
+        python_callable=_t2
+    )
+```
