@@ -482,3 +482,21 @@ t1 >> branch >> [t2, t3]
 ```
 
 The path that is not chosen by the branch operator is skipped automatically.
+
+## Trigger Rules
+[Reference](https://marclamberti.com/blog/airflow-trigger-rules-all-you-need-to-know/#:~:text=Airflow%20trigger%20rules%20are%20simple,that%20just%20with%20a%20callback.)
+- all_success (default)
+- all_failed
+- all_done
+- one_failed
+- one_success
+- none_failed
+- none_failed_min_one_success
+- none_skipped
+
+## Datasets and Scheduling DAGs
+
+You can trigger your DAGS based on data updates.
+### What is a Dataset?
+
+
