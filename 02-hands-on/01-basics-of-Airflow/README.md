@@ -71,3 +71,32 @@ This architecture consists of a central scheduler, a metadata database, and mult
 - Each worker node independently pulls tasks from the scheduler and executes them, reporting back the status and results. 
  
  This distributed approach enables efficient task execution, resource utilization, and fault tolerance, making Airflow suitable for handling large-scale and complex workflows.
+
+ # Install Airflow with Docker
+
+Build a docker image from the Dockerfile (make sure you are in the current directory where the dockerfile, entrypoint and constraint files are) and name it airflow-basic
+
+```bash
+docker build -t airflow-basic .
+```
+
+Check the image was created
+
+```bash
+docker image ls
+REPOSITORY                                  TAG           IMAGE ID       CREATED          SIZE
+airflow-basic                               latest        440147572f3b   45 seconds ago   992MB
+...                                         ...           ...            ...              ...
+```
+
+Run the container 
+```bash
+docker run --rm -d -p 8080:8080 airflow-basic
+```
+
+Open a tab in your web browser and tab `localhost:8080` to check the installation.   
+user: admin  
+password: admin  
+![Screenshot](img/signin.jpg)
+![Screenshot](img/landing.jpg)
+
