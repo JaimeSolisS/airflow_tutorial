@@ -43,3 +43,31 @@ Process/sub process <u>**executing**</u> your taks
 - It encompasses the DAG, operators, and task instances.
 - Workflows define the logical and operational flow of tasks, specifying dependencies and triggering mechanisms.
 - Apache Airflow enables the orchestration and automation of workflows, ensuring reliable execution.
+
+# How Airflow works? 
+
+
+
+## One Node Architecture
+
+![Screenshot](img/single-node.webp)
+
+**Web server** – provides Web UI  
+**Scheduler** – schedules your tasks, pipelines, and workers  
+**Metastore** – stores metadata from tasks – usually uses PostgreSQL  
+**Executor** – An executor is a definition of how your task will be executed  
+**Queue**  – The queue defines the order in which tasks will be executed. It is part of the Executor in the one-node architecture  
+**Worker** – This is the actual process when a task is being executed; It is different from the Executor.
+If you choose the One Node architecture then Airflow’s core components would be combined in one node. Moreover, the Queue would be a part of the Executor.
+
+## Multi Nodes Architecture (Celery)
+![Screenshot](img/multi-node.webp)
+
+This architecture consists of a central scheduler, a metadata database, and multiple worker nodes.  
+- **The scheduler** is responsible for orchestrating task execution and maintaining the overall workflow state  
+- **the metadata database** stores information about tasks, their dependencies, and their execution history. 
+- **The worker nodes** are responsible for executing tasks in parallel across the cluster.  
+- When a workflow is triggered, the scheduler assigns tasks to available worker nodes based on their capabilities and resource availability. 
+- Each worker node independently pulls tasks from the scheduler and executes them, reporting back the status and results. 
+ 
+ This distributed approach enables efficient task execution, resource utilization, and fault tolerance, making Airflow suitable for handling large-scale and complex workflows.
